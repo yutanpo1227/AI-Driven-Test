@@ -1,0 +1,40 @@
+name: Summarize PR diff with Codex
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  summarize_diff:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write  # コメント投稿に必要
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Codex CLI
+        run: npm install -g @openai/codex
+
+      - name: Install GitHub CLI
+        uses: cli/gh-action@v2
+
+      - name: Summarize and comment
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN:        ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # PR 番号
+          NUM=${{ github.event.pull_request.number }}
+
+          # Diff を取得（--patch はフル diff）
+          DIFF="$(gh pr diff "$NUM" --patch)"
+
+          # Codex に要約させる
+          SUMMARY="$(printf '%s' "$DIFF" | \
+            codex -q "以下の Git diff を 5 行以内で要約し、主要変更点を箇条書きにしてください。")"
+
+          # PR へコメント
+          gh pr comment "$NUM" --body "### 📝 Auto-generated diff summary\n$SUMMARY"
