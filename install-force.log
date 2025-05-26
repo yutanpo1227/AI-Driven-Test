@@ -1,0 +1,9 @@
+npm warn using --force Recommended protections disabled.
+npm error code ENOTEMPTY
+npm error syscall rename
+npm error path /home/runner/work/AI-Driven-Test/AI-Driven-Test/node_modules/chokidar
+npm error dest /home/runner/work/AI-Driven-Test/AI-Driven-Test/node_modules/.chokidar-4pvGLR8T
+npm error errno -39
+npm error ENOTEMPTY: directory not empty, rename '/home/runner/work/AI-Driven-Test/AI-Driven-Test/node_modules/chokidar' -> '/home/runner/work/AI-Driven-Test/AI-Driven-Test/node_modules/.chokidar-4pvGLR8T'
+npm error Log files were not written due to an error writing to the directory: /home/runner/.npm/_logs
+npm error You can rerun the command with `--loglevel=verbose` to see the logs in your terminal
