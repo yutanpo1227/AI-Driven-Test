@@ -2,13 +2,13 @@ name: Issue to PR with Codex
 
 on:
   issues:
-    types: [opened]
-    labels:
-      - codex
+    types: [opened, labeled]
 
 jobs:
   fix_with_codex:
     runs-on: ubuntu-latest
+    # codexラベルが付いているissueのみ実行
+    if: contains(github.event.issue.labels.*.name, 'codex')
 
     permissions:         # gh コマンドで PR を作るため
       contents: write    # push
