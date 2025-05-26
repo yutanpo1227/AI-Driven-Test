@@ -3,6 +3,8 @@ name: Issue to PR with Codex
 on:
   issues:
     types: [opened]
+    labels:
+      - codex
 
 jobs:
   fix_with_codex:
