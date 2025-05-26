@@ -11,6 +11,7 @@ jobs:
     permissions:         # gh コマンドで PR を作るため
       contents: write    # push
       pull-requests: write
+      actions: write     # GitHub Actions からの PR 作成を許可
 
     steps:
       - uses: actions/checkout@v4
@@ -37,12 +38,22 @@ jobs:
           # --full-auto は "自動で編集して commit まで" 行うモード
           codex -a full-auto --quiet "$PROMPT"
 
+          # 変更があった場合に確実にコミット
+          if [[ -n $(git status --porcelain) ]]; then
+            git add .
+            git commit -m "Fix: #${{ github.event.issue.number }} - ${{ github.event.issue.title }}"
+          fi
+
           # 変更加えて commit が出来ている想定で push
           git push -u origin "$BRANCH"
 
       - name: Create Pull Request
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GitHub Actions から PR を作成するために Personal Access Token が必要
+          # Repository Settings > Secrets and variables > Actions で 
+          # PAT_TOKEN という名前で Personal Access Token を設定してください
+          # 権限: repo, workflow
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           gh pr create \
             --title "Fix: #${{ github.event.issue.number }} – ${{ github.event.issue.title }}" \
