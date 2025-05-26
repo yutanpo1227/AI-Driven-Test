@@ -7,7 +7,6 @@
 3. codexが修正
 4. codexがPRを作成
 5. PRの作成をトリガーにPRのdiffの内容を要約させる
-https://dev.classmethod.jp/articles/codex-cli-github-actions/
 6. 人間によるレビューとマージ
 
 ## mainへのマージをトリガーに自動でIssueを作成する
