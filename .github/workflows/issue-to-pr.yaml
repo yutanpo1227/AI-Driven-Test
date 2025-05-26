@@ -46,7 +46,7 @@ jobs:
           fi
 
           # Issue タイトル + 本文をプロンプト化
-          PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`rm -rf node_modules package-lock.json && npm install && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
+          PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`npm ci && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
 
           # --full-auto は "自動で編集して commit まで" 行うモード
           codex -a full-auto --quiet "$PROMPT"
