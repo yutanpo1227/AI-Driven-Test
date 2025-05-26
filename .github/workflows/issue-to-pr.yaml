@@ -18,9 +18,6 @@ jobs:
       - name: Install Codex CLI
         run: npm install -g @openai/codex  # Codex CLI は npm グローバルで OK  [oai_citation:0‡GitHub](https://github.com/openai/codex)
 
-      - name: Install GitHub CLI
-        uses: cli/gh-action@v2
-
       - name: Generate patch with Codex
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
