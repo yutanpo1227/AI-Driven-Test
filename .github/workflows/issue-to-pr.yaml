@@ -18,8 +18,8 @@ jobs:
 
       - name: Set git user
         run: |
-          git config user.name "$(git --no-pager log --format=format:'%an' -n 1)"
-          git config user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,8 +37,16 @@ jobs:
           BRANCH="codex/issue-${{ github.event.issue.number }}"
           git switch -c "$BRANCH"
 
+          # npm関連のクリーンアップ
+          if [ -d "node_modules" ]; then
+            rm -rf node_modules
+          fi
+          if [ -f "package-lock.json" ]; then
+            rm package-lock.json
+          fi
+
           # Issue タイトル + 本文をプロンプト化
-          PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`npm install && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
+          PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`rm -rf node_modules package-lock.json && npm install && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
 
           # --full-auto は "自動で編集して commit まで" 行うモード
           codex -a full-auto --quiet "$PROMPT"
