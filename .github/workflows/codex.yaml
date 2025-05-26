@@ -1,0 +1,21 @@
+name: codex
+on:
+  workflow_dispatch:
+
+jobs:
+  my-first-codex:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Switch to head branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+
+      - name: my first codex
+        run: |
+          npm install -g @openai/codex
+          export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          codex -a auto-edit --quiet "カレントディレクトリのファイル構造教えて"
