@@ -28,8 +28,8 @@ jobs:
           gh pr diff ${PR_NUMBER} > pr-diff.txt
 
           # codexによる要約を codex-summary.md に保存
-          codex -a auto-edit --quiet \
-            "pr-diff.txt から更新差分を日本語で要約して。変更があったファイルの内容を確認して。要約内容を .codex-pr-comment-template.md のフォーマットに従って codex-summary.md に保存して。"
+          codex -m o4-mini -a auto-edit --quiet \
+            "pr-diff.txt から更新差分を日本語で要約して。変更があったファイルの内容を確認して。プルリクエストとして要約内容をcodex-summary.md に保存して。"
 
           # gh コマンドでPRにコメント
           gh pr comment --body-file codex-summary.md "${PR_URL}"
