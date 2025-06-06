@@ -71,14 +71,15 @@ jobs:
           # Issue タイトル + 本文をプロンプト化
           PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`npm ci && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
 
-          # 画像ファイルを配列で収集
+          # 画像ファイルを配列で収集(最後に枚数を表示)
           IMAGE_FILES=()
           if [ -d "$TEMP_DIR" ]; then
             while IFS= read -r -d '' file; do
               IMAGE_FILES+=("$file")
             done < <(find "$TEMP_DIR" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.webp" -o -name "*.svg" \) -print0)
           fi
-
+          echo "IMAGE_FILES=${#IMAGE_FILES[@]}" >> "$GITHUB_ENV"
+          
           # --full-auto は "自動で編集して commit まで" 行うモード
           if [ ${#IMAGE_FILES[@]} -gt 0 ]; then
             # 画像ファイルがある場合は -i オプションで渡す
@@ -89,7 +90,7 @@ jobs:
             codex_args+=("$PROMPT")
             codex "${codex_args[@]}"
           else
-            codex -a full-auto --quiet "$PROMPT"
+          codex -a full-auto --quiet "$PROMPT"
           fi
 
           # 変更があった場合に確実にコミット
