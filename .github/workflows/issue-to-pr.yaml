@@ -49,7 +49,7 @@ jobs:
               echo "Downloading: $url"
               curl -sSLJ \
                     -H "Authorization: Bearer $GH_TOKEN" \
-                    -o "$TEMP_DIR/$fname" "$url" || echo "Failed to download: $url"
+                    -o "$TEMP_DIR/$fname.png" "$url" || echo "Failed to download: $url"
             done
           # 最後にTEMP_DIRの中身を表示
           echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
@@ -81,6 +81,8 @@ jobs:
               IMAGE_FILES+=("$file")
             done < <(find "$TEMP_DIR" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.webp" -o -name "*.svg" \) -print0)
           fi
+
+          echo "IMAGE_FILES=${#IMAGE_FILES[@]}" >> "$GITHUB_ENV"
 
           # --full-auto は "自動で編集して commit まで" 行うモード
           if [ ${#IMAGE_FILES[@]} -gt 0 ]; then
