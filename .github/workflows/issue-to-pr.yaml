@@ -28,6 +28,9 @@ jobs:
         with:
           node-version: "latest"
 
+      - name: Install dependencies
+        run: npm ci
+
       - name: Install Codex CLI
         run: npm install -g @openai/codex  # Codex CLI は npm グローバルで OK  [oai_citation:0‡GitHub](https://github.com/openai/codex)
 
@@ -64,7 +67,7 @@ jobs:
           git checkout -B "$BRANCH"
 
           # Issue タイトル + 本文をプロンプト化
-          PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`npm ci && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
+          PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
 
           # 画像ファイルを配列で収集
           IMAGE_FILES=()
