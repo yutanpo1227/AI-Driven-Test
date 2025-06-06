@@ -72,7 +72,7 @@ jobs:
           fi
 
           # Issue タイトル + 本文をプロンプト化
-          PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`npm ci && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
+          PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`npm i && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
 
           # 画像ファイルを配列で収集
           IMAGE_FILES=()
