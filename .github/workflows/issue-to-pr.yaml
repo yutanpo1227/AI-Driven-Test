@@ -41,7 +41,7 @@ jobs:
           TEMP_DIR="$RUNNER_TEMP/issue_imgs"
           echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
           mkdir -p "$TEMP_DIR"
-          shopt -s nullglob               # 空マッチを空配列に
+          
           echo "$ISSUE_BODY" | \
             grep -oE 'https://[^ )]+(\.(png|jpe?g|gif|webp|svg)|/user-attachments/assets/[0-9a-fA-F-]+)' | \
             while IFS= read -r url; do
@@ -49,21 +49,12 @@ jobs:
               echo "Downloading: $url"
               curl -sSLJ \
                     -H "Authorization: Bearer $GH_TOKEN" \
-                    -o "$TEMP_DIR/$fname" "$url"
+                    -o "$TEMP_DIR/$fname" "$url" || echo "Failed to download: $url"
             done
-
-          # Codex CLI 用 -i 引数を作成
-          files=("$TEMP_DIR"/*)
-          IMG_ARGS=""
-          for f in "${files[@]}"; do
-            IMG_ARGS+=" -i $(printf '%q' "$f")"
-          done
-          echo "IMG_ARGS=$IMG_ARGS" >> "$GITHUB_ENV"
 
       - name: Generate patch with Codex
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          IMG_ARGS: ${{ env.IMG_ARGS }}
         run: |
           # ブランチ名を決定(codex/issue-${{ github.event.issue.number }}-{uuid})
           BRANCH="codex/issue-${{ github.event.issue.number }}-$(uuidgen)"
@@ -80,14 +71,26 @@ jobs:
           # Issue タイトル + 本文をプロンプト化
           PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`npm ci && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
 
+          # 画像ファイルを配列で収集
+          IMAGE_FILES=()
+          if [ -d "$TEMP_DIR" ]; then
+            while IFS= read -r -d '' file; do
+              IMAGE_FILES+=("$file")
+            done < <(find "$TEMP_DIR" -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.webp" -o -name "*.svg" \) -print0)
+          fi
+
           # --full-auto は "自動で編集して commit まで" 行うモード
-          if [[ -n "$IMG_ARGS" ]]; then
-            eval codex -a full-auto --quiet $IMG_ARGS "$PROMPT"
+          if [ ${#IMAGE_FILES[@]} -gt 0 ]; then
+            # 画像ファイルがある場合は -i オプションで渡す
+            codex_args=(-a full-auto --quiet)
+            for img in "${IMAGE_FILES[@]}"; do
+              codex_args+=(-i "$img")
+            done
+            codex_args+=("$PROMPT")
+            codex "${codex_args[@]}"
           else
             codex -a full-auto --quiet "$PROMPT"
           fi
-
-
 
           # 変更があった場合に確実にコミット
           if [[ -n $(git status --porcelain) ]]; then
