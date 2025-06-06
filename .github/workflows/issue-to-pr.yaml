@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     # codexラベルが追加された時のみ実行
     if: github.event.label.name == 'codex'
+    env:
+      TEMP_IMG: ${{ runner.temp }}/issue_screenshot.png   # 画像を保存するディレクトリ
 
     permissions:         # gh コマンドで PR を作るため
       contents: write    # push
@@ -31,13 +33,42 @@ jobs:
       - name: Install Codex CLI
         run: npm install -g @openai/codex  # Codex CLI は npm グローバルで OK  [oai_citation:0‡GitHub](https://github.com/openai/codex)
 
+      # 画像を TEMP_IMG に保存（repo 外なので git add 対象にならない）
+      - name: Download all screenshots
+        id: dl_images
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          TEMP_DIR: ${{ env.TEMP_DIR }}
+        run: |
+          mkdir -p "$TEMP_DIR"
+          shopt -s nullglob               # 空マッチを空配列に
+          echo "$ISSUE_BODY" | \
+            grep -oE 'https://[^ )]+(\.(png|jpe?g|gif|webp|svg)|/user-attachments/assets/[0-9a-fA-F-]+)' | \
+            while IFS= read -r url; do
+              fname=$(basename "${url%%\?*}")
+              echo "Downloading: $url"
+              curl -sSLJ \
+                    -H "Authorization: Bearer $GH_TOKEN" \
+                    -o "$TEMP_DIR/$fname" "$url"
+            done
+
+          # Codex CLI 用 -i 引数を作成
+          files=("$TEMP_DIR"/*)
+          IMG_ARGS=""
+          for f in "${files[@]}"; do
+            IMG_ARGS+=" -i $(printf '%q' "$f")"
+          done
+          echo "IMG_ARGS=$IMG_ARGS" >> "$GITHUB_ENV"
+
       - name: Generate patch with Codex
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          IMG_ARGS: ${{ env.IMG_ARGS }}
         run: |
-          # ブランチ名を決定
-          BRANCH="codex/issue-${{ github.event.issue.number }}"
-          git switch -c "$BRANCH"
+          # ブランチ名を決定(codex/issue-${{ github.event.issue.number }}-{uuid})
+          BRANCH="codex/issue-${{ github.event.issue.number }}-$(uuidgen)"
+          git checkout -B "$BRANCH"
 
           # npm関連のクリーンアップ
           if [ -d "node_modules" ]; then
@@ -51,7 +82,13 @@ jobs:
           PROMPT="$(printf '%s\n\n%s\n%s\n' "${{ github.event.issue.title }}" "${{ github.event.issue.body }}" "最後に\`npm ci && npm run build\`を実行してエラーが出ないことを確認してください。 .gitのような'.'から始まるファイル、フォルダの中身は絶対に変更しないでください。")"
 
           # --full-auto は "自動で編集して commit まで" 行うモード
-          codex -a full-auto --quiet "$PROMPT"
+          if [[ -n "$IMG_ARGS" ]]; then
+            eval codex -a full-auto --quiet $IMG_ARGS "$PROMPT"
+          else
+            codex -a full-auto --quiet "$PROMPT"
+          fi
+
+
 
           # 変更があった場合に確実にコミット
           if [[ -n $(git status --porcelain) ]]; then
