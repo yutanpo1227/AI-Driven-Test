@@ -9,8 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     # codexラベルが追加された時のみ実行
     if: github.event.label.name == 'codex'
-    env:
-      TEMP_IMG: ${{ runner.temp }}/issue_screenshot.png   # 画像を保存するディレクトリ
 
     permissions:         # gh コマンドで PR を作るため
       contents: write    # push
@@ -39,8 +37,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_BODY: ${{ github.event.issue.body }}
-          TEMP_DIR: ${{ env.TEMP_DIR }}
         run: |
+          TEMP_DIR="$RUNNER_TEMP/issue_imgs"
+          echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
           mkdir -p "$TEMP_DIR"
           shopt -s nullglob               # 空マッチを空配列に
           echo "$ISSUE_BODY" | \
